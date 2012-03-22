@@ -1,0 +1,8 @@
+name = Workbench Nodequeue
+description = Manage Nodequeues within Workbench
+package = Workbench
+core = 7.x
+
+configure = admin/config/workbench/nodequeue
+
+files[] = workbench_nodequeue.module

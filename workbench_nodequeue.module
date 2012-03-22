@@ -1,0 +1,78 @@
+<?php
+
+/**
+ * @file
+ * Managing Nodequeues in Workbench
+ *
+ * 
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function workbench_nodequeue_menu() {
+  $items = array();
+
+  $items['admin/workbench/queues'] = array(
+    'title' => 'My Queues',
+    'page callback' => 'workbench_nodequeue_overview',
+    'access arguments' => array('access workbench'),
+    'weight' => 0,
+    'type' => MENU_LOCAL_TASK | MENU_NORMAL_ITEM,
+    'file' => 'workbench_nodequeue.pages.inc',
+  );
+  
+  $queues = db_select('nodequeue_queue','n')
+    ->fields('n', array('qid', 'title'))
+    ->execute()
+    ->fetchAll();
+
+
+  
+  $items['admin/workbench/queues/all'] = array(
+    'title' => 'All',
+    'page callback' => 'workbench_nodequeue_queue_view',
+    'page arguments' => array(3),
+    'access arguments' => array('access workbench'),
+    'weight' => -10,
+    'type' => MENU_DEFAULT_LOCAL_TASK
+  );
+
+
+  foreach($queues as $queue) {
+    dsm($queue->title);
+    $items['admin/workbench/queues/' . $queue->qid] = array(
+      'title' => $queue->title,
+      'page callback' => 'workbench_nodequeue_queue_view',
+      'page arguments' => array(3),
+      'access arguments' => array('access workbench'),
+      'type' => MENU_LOCAL_TASK
+    );
+  }
+  return $items;
+}
+
+function workbench_nodequeue_queue_view($qid) {
+  $module = 'nodequeue';
+  $name = 'includes/nodequeue.admin';
+  $type = 'inc';
+  if (module_load_include($type, $module, $name) === FALSE) {
+    return drupal_not_found();
+  }
+  $queue = nodequeue_load($qid);
+
+  $subqueues = array();
+  if ($queue->subqueues == 1) {
+    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+  } else {
+    // @TODO Error reporting: Only simple queues allowed
+    return drupal_not_found();
+  }
+
+  $subqueue = reset($subqueues);
+  
+  // // get nodes from the queue
+  $nodes = _nodequeue_dragdrop_get_nodes($queue, $subqueue);
+  return drupal_get_form('nodequeue_arrange_subqueue_form_' . $subqueue->sqid, $queue, $nodes, $subqueue);
+
+}
