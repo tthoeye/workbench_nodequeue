@@ -40,7 +40,6 @@ function workbench_nodequeue_menu() {
 
 
   foreach($queues as $queue) {
-    dsm($queue->title);
     $items['admin/workbench/queues/' . $queue->qid] = array(
       'title' => $queue->title,
       'page callback' => 'workbench_nodequeue_queue_view',
